@@ -8,7 +8,8 @@ public class MenuController : MonoBehaviour
     public GameObject menuPanel;
     public GameObject leaderboardPanel;
     public GameObject settingsPanel;
-
+    [Header("Leaderboard")]
+    public Leaderboard leaderboard;
     [Header("Menu Buttons")]
     public Button playButton;
     public Button leaderboardButton;
@@ -52,6 +53,11 @@ public class MenuController : MonoBehaviour
         menuPanel.SetActive(false);
         leaderboardPanel.SetActive(true);
         settingsPanel.SetActive(false);
+        
+        if(leaderboard != null)
+        {
+            leaderboard.refreshDisplay();
+        }
     }
 
     public void onPlayButtonClicked()

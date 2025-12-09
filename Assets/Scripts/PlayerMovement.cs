@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -47,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
     private int aimDirection = 0; 
 
     private bool endSequenceRunning;
+
 
     private void Start()
     {
@@ -188,18 +190,20 @@ public class PlayerMovement : MonoBehaviour
         endSequenceRunning = true;
         //wait for the number of seconds specified by endDelaySeconds
         yield return new WaitForSeconds(endDelaySeconds);
-        //set gameComplete to true and stop timer if exists
+        //set gameComplete to true and pause timer if exists
         gameComplete = true;
-        stopTimerIfExists();
+        pauseTimerIfExists();
+        //save the completion time for leaderboard
+        saveCompletionTimeIfExists();
         //show gameplay menu panel
         GameplayMenu menu = gameplayMenu;
         //find it in scene if not assigned
         if (menu == null)
         {
 #if UNITY_2023_1_OR_NEWER
-            menu = Object.FindFirstObjectByType<GameplayMenu>(FindObjectsInactive.Include);
+            menu = UnityEngine.Object.FindFirstObjectByType<GameplayMenu>(FindObjectsInactive.Include);
 #else
-            menu = Object.FindObjectOfType<GameplayMenu>(true);
+            menu = UnityEngine.Object.FindObjectOfType<GameplayMenu>(true);
 #endif
         }
         //if menu is not null
@@ -217,8 +221,8 @@ public class PlayerMovement : MonoBehaviour
         endSequenceRunning = false;
     }
 
-    //a function to stop the timer in GameMechanics if it exists in the scene
-    private void stopTimerIfExists()
+    //a function to pause the timer in GameMechanics if it exists in the scene
+    private void pauseTimerIfExists()
     {
         //start with the GameMechanics reference assigned in the Inspector.
         GameMechanics gm = gameMechanics;
@@ -226,14 +230,71 @@ public class PlayerMovement : MonoBehaviour
         if (gm == null)
         {
 #if UNITY_2023_1_OR_NEWER
-            gm = Object.FindFirstObjectByType<GameMechanics>(FindObjectsInactive.Include);
+            gm = UnityEngine.Object.FindFirstObjectByType<GameMechanics>(FindObjectsInactive.Include);
 #else
-            gm = Object.FindObjectOfType<GameMechanics>(true);
+            gm = UnityEngine.Object.FindObjectOfType<GameMechanics>(true);
 #endif
         }
-        //if found, stop the timer
+        //if found, pause the timer
         if (gm != null)
-            gm.stopTimer();
+        {
+            gm.CompleteGame();
+        }
+    }
+
+    //save the current displayed timer string into PlayerPrefs for the leaderboard
+    private void saveCompletionTimeIfExists()
+    {
+        GameMechanics gm = gameMechanics;
+        if (gm == null)
+        {
+#if UNITY_2023_1_OR_NEWER
+            gm = UnityEngine.Object.FindFirstObjectByType<GameMechanics>(FindObjectsInactive.Include);
+#else
+            gm = UnityEngine.Object.FindObjectOfType<GameMechanics>(true);
+#endif
+        }
+        if (gm != null && gm.timerText != null)
+        {
+            string timerString = gm.timerText.text;
+            // save last completion time as a convenience
+            PlayerPrefs.SetString("LevelCompletionTime", timerString);
+
+            // also append to the full history for leaderboard, store as total milliseconds for sorting
+            if (TryParseTimerStringToMillis(timerString, out int totalMs))
+            {
+                AppendTimeToHistory(totalMs);
+            }
+            PlayerPrefs.Save();
+        }
+    }
+
+    private static bool TryParseTimerStringToMillis(string timerString, out int totalMs)
+    {
+        totalMs = 0;
+        if (string.IsNullOrWhiteSpace(timerString)) return false;
+        var parts = timerString.Split(':');
+        if (parts.Length != 3) return false;
+        if (!int.TryParse(parts[0], out int minutes)) return false;
+        if (!int.TryParse(parts[1], out int seconds)) return false;
+        if (!int.TryParse(parts[2], out int millis)) return false;
+        totalMs = (minutes * 60 * 1000) + (seconds * 1000) + millis;
+        return true;
+    }
+
+    private static void AppendTimeToHistory(int totalMs)
+    {
+        const string key = "LevelTimes";
+        string existing = PlayerPrefs.GetString(key, string.Empty);
+        // use '|' as delimiter
+        if (string.IsNullOrEmpty(existing))
+        {
+            PlayerPrefs.SetString(key, totalMs.ToString());
+        }
+        else
+        {
+            PlayerPrefs.SetString(key, existing + "|" + totalMs.ToString());
+        }
     }
 
     //unity builtin function to draw gizmos in the editor when the object is selected

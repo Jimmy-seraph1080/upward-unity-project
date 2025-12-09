@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class GameMechanics : MonoBehaviour
@@ -9,6 +9,7 @@ public class GameMechanics : MonoBehaviour
 
     private float elaspedTime = 0f;
     private bool isTimerRunning = false;
+    private bool gameComplete = false;
 
     //start is called once before the first execution of Update after the MonoBehaviour is created
     //start is a Unity builtin function
@@ -57,7 +58,7 @@ public class GameMechanics : MonoBehaviour
     }
 
     //a public function to pause the timer
-    public void pausetTimer()
+    public void pauseTimer()
     {
         //set isTimerRunning to false
         isTimerRunning = false;
@@ -78,5 +79,44 @@ public class GameMechanics : MonoBehaviour
         elaspedTime = 0f;
         updateTimerDisplay();
 
+    }
+    public void CompleteGame()
+    {
+        gameComplete = true;
+        pauseTimer();   // or pausetTimer() if that’s what your method is called
+
+        // Show leaderboard data panel to get player name
+        LeaderboardDataHandler handler = FindObjectOfType<LeaderboardDataHandler>();
+        if (handler != null)
+        {
+            handler.ShowLeaderboardDataPanel(elaspedTime);   // use your timer variable name
+        }
+        else
+        {
+            // Fallback: save time without name if handler not found
+            SaveCompletionTime(elaspedTime);
+        }
+    }
+
+    void SaveCompletionTime(float time)
+    {
+        // Get existing times
+        string timesKey = "LevelCompletionTimes";
+        string countKey = "LevelCompletionCount";
+
+        int count = PlayerPrefs.GetInt(countKey, 0);
+
+        // Save this time (and empty name as fallback)
+        PlayerPrefs.SetFloat(timesKey + "_" + count, time);
+        PlayerPrefs.SetString("LevelCompletionNames_" + count, "");
+        count++;
+        PlayerPrefs.SetInt(countKey, count);
+
+        PlayerPrefs.Save();
+    }
+
+    public bool IsGameComplete()
+    {
+        return gameComplete;
     }
 }

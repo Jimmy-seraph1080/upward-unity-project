@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "324772202612",
+    "firebase_url": "https://upward-leaderboard-default-rtdb.firebaseio.com",
+    "project_id": "upward-leaderboard",
+    "storage_bucket": "upward-leaderboard.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324772202612:android:6ab3efc80dcba62dff6921",
+        "android_client_info": {
+          "package_name": "com.defaultStudio.Upward"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAM_p31kngebkI-aLHgtI_27qIM9Nfm1TY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
